@@ -3,237 +3,449 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-<title>日本の滝マップ｜小池雄悟</title>
+<title>日本の滝百選｜小池雄悟の制覇録</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;800&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1419;
-    --panel: #1a2028;
-    --panel-2: #232b36;
-    --text: #e8edf2;
-    --text-dim: #8a96a6;
-    --accent: #ff5252;
-    --accent-2: #ff8a80;
-    --gray: #6b7785;
-    --border: #2c3540;
-    --ok: #5fd17a;
+    --bg-deep: #060a10;
+    --bg: #0c1218;
+    --panel: #131b24;
+    --panel-2: #1c2632;
+    --line: #2a3644;
+    --text: #ecf0f5;
+    --text-2: #aebac8;
+    --text-dim: #6f7d8e;
+    --accent: #d63a3a;        /* 朱 */
+    --accent-2: #ff6b6b;
+    --accent-glow: rgba(214, 58, 58, 0.55);
+    --water: #4ea7d8;
+    --water-2: #7fc4e6;
+    --gold: #d4af37;
+    --serif: "Shippori Mincho", "Noto Serif JP", "Hiragino Mincho ProN", serif;
+    --sans: -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif; background: var(--bg); color: var(--text); }
-  #app { display: flex; flex-direction: column; height: 100vh; }
+  html, body { margin: 0; padding: 0; background: var(--bg-deep); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
 
-  header.topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 20px; background: var(--panel);
-    border-bottom: 1px solid var(--border); z-index: 1000;
+  /* ========== HERO ========== */
+  .hero {
+    position: relative; height: 92vh; min-height: 560px;
+    background:
+      linear-gradient(180deg, rgba(6,10,16,0.45) 0%, rgba(6,10,16,0.35) 40%, var(--bg-deep) 100%),
+      url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Nachi_Falls_in_2015-3-13.jpg/1920px-Nachi_Falls_in_2015-3-13.jpg') center/cover no-repeat,
+      linear-gradient(180deg, #1a2c3d, #060a10);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 20px; overflow: hidden;
   }
-  .title-block h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.02em; }
-  .title-block .sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-  .stats { display: flex; gap: 16px; align-items: center; }
-  .stat { text-align: right; }
-  .stat .num { font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
-  .stat .num.total { color: var(--text); }
-  .stat .lbl { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
-  .progress-bar { width: 160px; height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
-  .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.4s ease; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(6,10,16,0.6) 80%);
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; z-index: 2; max-width: 720px; }
+  .hero-kicker {
+    font-family: var(--serif); font-size: 13px; letter-spacing: 0.5em; color: var(--water-2);
+    margin-bottom: 24px; text-indent: 0.5em;
+  }
+  .hero-title {
+    font-family: var(--serif); font-weight: 700; font-size: clamp(40px, 7vw, 84px);
+    line-height: 1.1; margin: 0 0 12px; letter-spacing: 0.05em;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.7);
+  }
+  .hero-sub {
+    font-family: var(--serif); font-size: clamp(13px, 1.5vw, 17px); color: var(--text-2);
+    margin-bottom: 48px; letter-spacing: 0.1em; line-height: 1.8;
+  }
+  .hero-counter {
+    display: inline-flex; align-items: baseline; gap: 4px;
+    padding: 18px 36px; border: 1px solid rgba(214,58,58,0.4);
+    background: rgba(6,10,16,0.55); backdrop-filter: blur(12px);
+    border-radius: 4px;
+  }
+  .hero-counter .num {
+    font-family: var(--serif); font-weight: 800; font-size: 56px;
+    color: var(--accent-2); line-height: 1;
+    text-shadow: 0 0 20px var(--accent-glow);
+  }
+  .hero-counter .slash { font-family: var(--serif); font-size: 32px; color: var(--text-dim); margin: 0 8px; }
+  .hero-counter .total { font-family: var(--serif); font-size: 32px; color: var(--text-2); }
+  .hero-counter .lbl { font-family: var(--serif); font-size: 11px; color: var(--text-dim); letter-spacing: 0.4em; margin-left: 14px; align-self: center; }
 
-  .controls {
-    display: flex; gap: 8px; padding: 8px 20px; align-items: center;
-    background: var(--panel-2); border-bottom: 1px solid var(--border);
-    overflow-x: auto;
+  .hero-rank {
+    margin-top: 28px; font-family: var(--serif);
+    font-size: 14px; letter-spacing: 0.3em; color: var(--gold);
   }
+  .hero-rank .badge { display: inline-block; padding: 6px 16px; border: 1px solid rgba(212,175,55,0.4); border-radius: 2px; background: rgba(212,175,55,0.05); }
+
+  .hero-scroll {
+    position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+    font-family: var(--serif); font-size: 11px; letter-spacing: 0.4em; color: var(--text-2);
+    z-index: 2; opacity: 0.85;
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+  /* ========== MAP SECTION ========== */
+  .map-section { position: relative; }
+  .map-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 24px; background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 500;
+  }
+  .map-bar h2 {
+    font-family: var(--serif); font-weight: 700; font-size: 16px;
+    margin: 0 8px 0 0; letter-spacing: 0.15em;
+  }
+  .map-bar h2 .accent { color: var(--accent-2); }
   .filter-btn {
-    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
-    padding: 6px 14px; border-radius: 16px; font-size: 12px; cursor: pointer;
-    white-space: nowrap; transition: all 0.15s;
+    background: transparent; border: 1px solid var(--line); color: var(--text-dim);
+    padding: 6px 14px; border-radius: 2px; font-size: 12px; cursor: pointer;
+    font-family: var(--serif); letter-spacing: 0.1em;
+    transition: all 0.15s;
   }
   .filter-btn:hover { border-color: var(--accent); color: var(--text); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .sync-status { margin-left: auto; font-size: 11px; color: var(--text-dim); }
-  .sync-status.ok { color: var(--ok); }
-  .sync-status.err { color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .sync { margin-left: auto; font-size: 11px; color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.15em; }
+  .sync.ok { color: var(--water-2); }
+  .sync.err { color: var(--accent-2); }
 
-  #map { flex: 1; background: var(--panel); }
+  #map { height: 78vh; min-height: 540px; background: var(--bg); }
 
-  /* ピンスタイル */
-  .pin {
-    width: 22px; height: 22px; border-radius: 50%;
-    border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 11px; font-weight: 700;
-    transition: transform 0.15s;
+  /* ========== PINS ========== */
+  .pin-wrap {
+    position: relative; width: 28px; height: 38px;
+    transform-origin: bottom center;
+    transition: transform 0.18s ease;
+    cursor: pointer;
   }
-  .pin.visited { background: var(--accent); }
-  .pin.unvisited { background: var(--gray); opacity: 0.7; }
-  .pin.unvisited:hover { opacity: 1; transform: scale(1.15); }
-  .pin.visited:hover { transform: scale(1.15); }
+  .pin-wrap:hover { transform: scale(1.2) translateY(-2px); z-index: 999; }
+  .pin-svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .pin-wrap.visited .pin-svg { filter: drop-shadow(0 0 8px var(--accent-glow)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+  .pin-wrap.visited::after {
+    content: ""; position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
+    width: 14px; height: 4px; background: var(--accent-glow);
+    border-radius: 50%; filter: blur(3px);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.5; transform: translateX(-50%) scale(1); } 50% { opacity: 1; transform: translateX(-50%) scale(1.4); } }
+  .pin-crown {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    font-size: 16px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+  }
 
-  /* ポップアップ */
+  /* ========== POPUP ========== */
   .leaflet-popup-content-wrapper {
-    background: var(--panel); color: var(--text);
-    border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    background: var(--panel); color: var(--text); border-radius: 4px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    border: 1px solid var(--line);
   }
   .leaflet-popup-tip { background: var(--panel); }
-  .leaflet-popup-content { margin: 14px 16px; min-width: 240px; }
-  .pop-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-  .pop-pref { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
-  .pop-status { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-bottom: 10px; }
+  .leaflet-popup-content { margin: 16px 18px; min-width: 240px; }
+  .pop-three { font-family: var(--serif); font-size: 10px; color: var(--gold); letter-spacing: 0.3em; margin-bottom: 4px; }
+  .pop-title { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .pop-pref { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; letter-spacing: 0.1em; }
+  .pop-status {
+    display: inline-block; padding: 3px 12px; border-radius: 2px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.2em; margin-bottom: 12px;
+    font-family: var(--serif);
+  }
   .pop-status.visited { background: var(--accent); color: #fff; }
-  .pop-status.unvisited { background: var(--panel-2); color: var(--text-dim); }
-  .pop-date { font-size: 11px; color: var(--ok); margin-bottom: 10px; }
-  .pop-img { width: 100%; max-height: 140px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
-  .pop-actions { display: flex; gap: 6px; flex-direction: column; }
+  .pop-status.unvisited { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
+  .pop-date { font-size: 11px; color: var(--water-2); margin-bottom: 12px; font-family: var(--serif); letter-spacing: 0.1em; }
+  .pop-img { width: 100%; max-height: 160px; object-fit: cover; border-radius: 2px; margin-bottom: 12px; }
+  .pop-actions { display: flex; flex-direction: column; gap: 6px; }
   .pop-btn {
-    display: block; text-align: center; padding: 8px;
-    text-decoration: none; border-radius: 6px;
-    font-size: 12px; font-weight: 600; cursor: pointer;
-    border: none; transition: all 0.15s;
+    display: block; text-align: center; padding: 10px; border-radius: 2px;
+    text-decoration: none; font-size: 12px; font-weight: 600; cursor: pointer; border: none;
+    font-family: var(--serif); letter-spacing: 0.15em; transition: all 0.15s;
   }
   .pop-btn.primary { background: var(--accent); color: #fff; }
-  .pop-btn.primary:hover { background: var(--accent-2); }
-  .pop-btn.primary:disabled { opacity: 0.5; cursor: wait; }
-  .pop-btn.secondary { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
-  .pop-btn.secondary:hover { color: var(--text); border-color: var(--accent); }
-  .pop-btn.ghost {
-    background: transparent; color: var(--text-dim);
-    border: 1px solid var(--border);
-  }
+  .pop-btn.primary:hover { background: var(--accent-2); transform: translateY(-1px); }
+  .pop-btn.primary:disabled { opacity: 0.5; cursor: wait; transform: none; }
+  .pop-btn.ghost { background: transparent; color: var(--text-2); border: 1px solid var(--line); }
   .pop-btn.ghost:hover { color: var(--text); border-color: var(--accent); }
 
-  .leaflet-control-attribution { font-size: 10px; }
+  /* ========== COLLECTION SECTION ========== */
+  .collection {
+    padding: 80px 24px 100px;
+    background:
+      radial-gradient(ellipse at top, rgba(78,167,216,0.05) 0%, transparent 50%),
+      var(--bg-deep);
+    border-top: 1px solid var(--line);
+  }
+  .collection-inner { max-width: 1200px; margin: 0 auto; }
+  .section-title {
+    font-family: var(--serif); font-size: 28px; font-weight: 700;
+    text-align: center; letter-spacing: 0.4em; margin: 0 0 8px;
+  }
+  .section-title .accent { color: var(--accent-2); }
+  .section-sub {
+    text-align: center; font-family: var(--serif); font-size: 12px;
+    color: var(--text-dim); letter-spacing: 0.3em; margin-bottom: 56px;
+  }
 
+  /* 達成バッジ */
+  .badges-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px; margin-bottom: 80px;
+  }
+  .badge-card {
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 24px 16px; text-align: center; border-radius: 4px;
+    position: relative; transition: all 0.25s;
+  }
+  .badge-card.unlocked {
+    border-color: rgba(212,175,55,0.4);
+    background: linear-gradient(135deg, var(--panel) 0%, rgba(212,175,55,0.06) 100%);
+    box-shadow: 0 0 20px rgba(212,175,55,0.1);
+  }
+  .badge-card.unlocked .badge-icon { filter: none; }
+  .badge-icon { font-size: 36px; margin-bottom: 8px; filter: grayscale(1) opacity(0.35); transition: filter 0.25s; }
+  .badge-name { font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: 0.15em; }
+  .badge-card.unlocked .badge-name { color: var(--gold); }
+  .badge-req { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.1em; }
+
+  /* 地域別制覇 */
+  .regions-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 80px;
+  }
+  .region-card {
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 18px 20px; border-radius: 4px;
+  }
+  .region-name { font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: 0.2em; margin-bottom: 8px; }
+  .region-progress {
+    height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .region-progress .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s; }
+  .region-stat { font-size: 11px; color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.1em; }
+  .region-stat .num { color: var(--accent-2); font-weight: 700; }
+
+  /* ギャラリー */
+  .gallery-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .gallery-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+    overflow: hidden; cursor: pointer; transition: all 0.25s;
+  }
+  .gallery-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(214,58,58,0.15); }
+  .gallery-img {
+    width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
+    background: var(--panel-2);
+  }
+  .gallery-img-fallback {
+    width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a2c3d, var(--panel-2));
+    font-size: 48px; color: var(--water);
+  }
+  .gallery-body { padding: 14px 16px; }
+  .gallery-name { font-family: var(--serif); font-size: 16px; font-weight: 700; letter-spacing: 0.05em; }
+  .gallery-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .gallery-pref { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; }
+  .gallery-date { font-size: 11px; color: var(--water-2); font-family: var(--serif); }
+  .gallery-empty {
+    grid-column: 1/-1; text-align: center; padding: 60px 20px;
+    color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.2em;
+  }
+
+  /* footer */
+  footer {
+    padding: 40px 20px; text-align: center; font-size: 11px;
+    color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.2em;
+    border-top: 1px solid var(--line); background: var(--bg);
+  }
+  footer .heart { color: var(--accent-2); }
+
+  /* loading */
   .loading-overlay {
-    position: fixed; inset: 0; background: var(--bg);
+    position: fixed; inset: 0; background: var(--bg-deep);
     display: flex; align-items: center; justify-content: center;
-    z-index: 9999; flex-direction: column; gap: 12px;
+    z-index: 9999; flex-direction: column; gap: 16px;
   }
   .spinner {
-    width: 40px; height: 40px; border: 3px solid var(--panel-2);
+    width: 40px; height: 40px; border: 2px solid var(--line);
     border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    animation: spin 0.9s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .leaflet-control-attribution { font-size: 9px; }
+
   @media (max-width: 600px) {
-    header.topbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
-    .title-block h1 { font-size: 15px; }
-    .stat .num { font-size: 18px; }
-    .progress-bar { width: 100px; }
-    .controls { padding: 6px 14px; }
+    .hero { height: 86vh; }
+    .hero-counter { padding: 14px 24px; }
+    .hero-counter .num { font-size: 42px; }
+    .map-bar { padding: 10px 14px; gap: 6px; }
+    .map-bar h2 { font-size: 13px; width: 100%; }
+    .collection { padding: 56px 14px 80px; }
+    .section-title { font-size: 22px; letter-spacing: 0.3em; }
   }
 </style>
 </head>
 <body>
+
 <div id="loading" class="loading-overlay">
   <div class="spinner"></div>
-  <div style="font-size: 13px; color: var(--text-dim);">Notionから滝データを読み込んでいます…</div>
+  <div style="font-family: var(--serif); font-size: 12px; color: var(--text-dim); letter-spacing: 0.3em;">読込中</div>
 </div>
 
-<div id="app">
-  <header class="topbar">
-    <div class="title-block">
-      <h1>🌊 日本の滝マップ</h1>
-      <div class="sub">クリックして「行った！」を記録 → Notionに自動同期</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">日本の滝百選</div>
+    <h1 class="hero-title">水と岩と森</h1>
+    <p class="hero-sub">日本列島の地形が刻み続けてきた、98の聖なる落差。<br>その一滝一滝を、自分の足で訪ねる記録。</p>
+    <div class="hero-counter">
+      <span class="num" id="hero-visited">0</span>
+      <span class="slash">/</span>
+      <span class="total" id="hero-total">98</span>
+      <span class="lbl">制覇</span>
     </div>
-    <div class="stats">
-      <div class="stat">
-        <div class="num"><span id="visited-count">0</span> / <span class="total" id="total-count">0</span></div>
-        <div class="lbl">VISITED</div>
-      </div>
-      <div class="progress-bar"><div class="fill" id="progress-fill" style="width:0%"></div></div>
-    </div>
-  </header>
-
-  <div class="controls">
-    <button class="filter-btn active" data-filter="all">すべて</button>
-    <button class="filter-btn" data-filter="visited">行った（赤）</button>
-    <button class="filter-btn" data-filter="unvisited">未訪問（灰）</button>
-    <span class="sync-status" id="sync-status">●</span>
+    <div class="hero-rank" id="hero-rank" style="display:none;"><span class="badge"></span></div>
   </div>
+  <div class="hero-scroll">scroll ↓</div>
+</section>
 
+<!-- MAP -->
+<section class="map-section">
+  <div class="map-bar">
+    <h2>地図 <span class="accent">─ 滝の在処</span></h2>
+    <button class="filter-btn active" data-filter="all">すべて</button>
+    <button class="filter-btn" data-filter="visited">行った</button>
+    <button class="filter-btn" data-filter="unvisited">未訪</button>
+    <span class="sync" id="sync">●</span>
+  </div>
   <div id="map"></div>
-</div>
+</section>
+
+<!-- COLLECTION -->
+<section class="collection">
+  <div class="collection-inner">
+
+    <h2 class="section-title">制覇 <span class="accent">の道</span></h2>
+    <p class="section-sub">— ACHIEVEMENT —</p>
+    <div class="badges-grid" id="badges"></div>
+
+    <h2 class="section-title">八地方 <span class="accent">の征服</span></h2>
+    <p class="section-sub">— REGIONAL CONQUEST —</p>
+    <div class="regions-grid" id="regions"></div>
+
+    <h2 class="section-title">訪 <span class="accent">れし滝</span></h2>
+    <p class="section-sub">— VISITED ARCHIVE —</p>
+    <div class="gallery-grid" id="gallery"></div>
+
+  </div>
+</section>
+
+<footer>
+  記録 · 小池雄悟 <span class="heart">❤</span> Notion + Cloudflare Workers + GitHub Pages
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const API_URL = 'https://taki-map-api.newgo-koike.workers.dev/api';
 
-const state = {
-  falls: [],
-  byId: new Map(),
-  markers: new Map(),
-  map: null,
-  visitedLayer: null,
-  unvisitedLayer: null,
+const THREE_GREATS = new Set(['華厳の滝', '那智の滝', '袋田の滝']);
+
+const PREF_TO_REGION = {
+  '北海道': '北海道',
+  '青森県': '東北', '秋田県': '東北', '岩手県': '東北', '山形県': '東北', '宮城県': '東北', '福島県': '東北',
+  '茨城県': '関東', '栃木県': '関東', '群馬県': '関東', '埼玉県': '関東', '千葉県': '関東', '東京都': '関東', '神奈川県': '関東',
+  '新潟県': '中部', '富山県': '中部', '石川県': '中部', '福井県': '中部', '山梨県': '中部', '長野県': '中部', '岐阜県': '中部', '静岡県': '中部', '愛知県': '中部',
+  '三重県': '近畿', '滋賀県': '近畿', '京都府': '近畿', '大阪府': '近畿', '兵庫県': '近畿', '奈良県': '近畿', '和歌山県': '近畿',
+  '鳥取県': '中国', '島根県': '中国', '岡山県': '中国', '広島県': '中国', '山口県': '中国',
+  '徳島県': '四国', '香川県': '四国', '愛媛県': '四国', '高知県': '四国',
+  '福岡県': '九州', '佐賀県': '九州', '長崎県': '九州', '熊本県': '九州', '大分県': '九州', '宮崎県': '九州', '鹿児島県': '九州',
+  '沖縄県': '沖縄',
 };
+const REGION_ORDER = ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州', '沖縄'];
+
+const BADGES = [
+  { req: 1,  icon: '🌱', name: '初滝',   key: 'first' },
+  { req: 5,  icon: '🍃', name: '五滝',   key: 'five' },
+  { req: 10, icon: '🌿', name: '拾滝',   key: 'ten' },
+  { req: 25, icon: '🏆', name: '廿五滝', key: 'twentyfive' },
+  { req: 50, icon: '⭐', name: '半達成', key: 'half' },
+  { req: 75, icon: '💎', name: '七十五', key: 'seventyfive' },
+  { req: 98, icon: '👑', name: '完全制覇', key: 'all' },
+];
+
+const state = { falls: [], byId: new Map(), markers: new Map(), map: null, visitedLayer: null, unvisitedLayer: null };
 
 function setSync(text, cls) {
-  const el = document.getElementById('sync-status');
+  const el = document.getElementById('sync');
   el.textContent = text;
-  el.className = 'sync-status ' + (cls || '');
+  el.className = 'sync ' + (cls || '');
 }
 
-function updateStats() {
-  const total = state.falls.length;
-  const visited = state.falls.filter(f => f.visited).length;
-  document.getElementById('visited-count').textContent = visited;
-  document.getElementById('total-count').textContent = total;
-  document.getElementById('progress-fill').style.width = (total ? visited / total * 100 : 0) + '%';
+function pinSVG(visited, isThreeGreat) {
+  const fill = visited ? '#d63a3a' : '#5d6c80';
+  const stroke = visited ? '#fff' : '#cfd6df';
+  const inner = visited ? '#fff' : '#0c1218';
+  const innerR = 4.2;
+  return `
+    <svg class="pin-svg" viewBox="0 0 28 38" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 1 C5.2 13.5 1 19 1 24.5 a13 13 0 0 0 26 0 C27 19 22.8 13.5 14 1 Z"
+            fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="14" cy="22" r="${innerR}" fill="${inner}"/>
+    </svg>
+  `;
 }
 
-function createIcon(visited) {
-  return L.divIcon({
-    className: '',
-    html: `<div class="pin ${visited ? 'visited' : 'unvisited'}">${visited ? '✓' : ''}</div>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-  });
+function createIcon(f) {
+  const isGreat = THREE_GREATS.has(f.name);
+  const html = `<div class="pin-wrap ${f.visited ? 'visited' : ''}">${pinSVG(f.visited, isGreat)}${isGreat ? '<div class="pin-crown">👑</div>' : ''}</div>`;
+  return L.divIcon({ className: '', html, iconSize: [28, 38], iconAnchor: [14, 38], popupAnchor: [0, -34] });
 }
 
 function buildPopup(f) {
+  const isGreat = THREE_GREATS.has(f.name);
   const wrap = document.createElement('div');
   const status = f.visited
-    ? '<span class="pop-status visited">行った</span>'
-    : '<span class="pop-status unvisited">未訪問</span>';
-  const date = f.visited && f.visitDate
-    ? `<div class="pop-date">📅 ${f.visitDate}</div>`
-    : '';
+    ? '<span class="pop-status visited">行 っ た</span>'
+    : '<span class="pop-status unvisited">未 訪</span>';
+  const date = f.visited && f.visitDate ? `<div class="pop-date">📅 ${f.visitDate}</div>` : '';
   const img = f.imageUrl
     ? `<img class="pop-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.style.display='none'" />`
     : '';
+  const great = isGreat ? '<div class="pop-three">日本三大瀑布 👑</div>' : '';
   wrap.innerHTML = `
+    ${great}
     <div class="pop-title">${f.name}</div>
     <div class="pop-pref">${f.pref || ''}</div>
-    ${status}
-    ${date}
-    ${img}
+    ${status}${date}${img}
     <div class="pop-actions">
-      <button class="pop-btn primary" data-action="toggle">${f.visited ? '未訪問に戻す' : '🎉 行った！'}</button>
-      <a class="pop-btn ghost" href="${f.notionUrl}" target="_blank" rel="noopener">Notionで詳細を見る</a>
+      <button class="pop-btn primary" data-action="toggle">${f.visited ? '未訪に戻す' : '✦ 行 っ た'}</button>
+      <a class="pop-btn ghost" href="${f.notionUrl}" target="_blank" rel="noopener">Notionで詳細</a>
     </div>
   `;
   wrap.querySelector('[data-action="toggle"]').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
-    btn.disabled = true;
-    btn.textContent = '更新中…';
-    setSync('● 同期中...', '');
+    btn.disabled = true; btn.textContent = '更新中…';
+    setSync('● 同期中', '');
     try {
       const action = f.visited ? 'unvisit' : 'visit';
       const res = await fetch(`${API_URL}/falls/${f.id}/${action}`, { method: 'POST' });
       const result = await res.json();
-      if (!result.ok) throw new Error(result.error || 'failed');
-      f.visited = result.visited;
-      f.visitDate = result.visitDate;
+      if (!result.ok) throw new Error('failed');
+      f.visited = result.visited; f.visitDate = result.visitDate;
       replaceMarker(f);
-      updateStats();
-      setSync('✓ 同期OK', 'ok');
+      renderAll();
+      setSync('✓ 同期', 'ok');
       state.map.closePopup();
     } catch (err) {
-      console.error(err);
-      btn.disabled = false;
-      btn.textContent = '失敗・もう一度';
+      btn.disabled = false; btn.textContent = '失敗・もう一度';
       setSync('⚠ 同期失敗', 'err');
     }
   });
@@ -242,15 +454,86 @@ function buildPopup(f) {
 
 function replaceMarker(f) {
   const old = state.markers.get(f.id);
-  if (old) {
-    state.visitedLayer.removeLayer(old);
-    state.unvisitedLayer.removeLayer(old);
-  }
-  const marker = L.marker([f.lat, f.lng], { icon: createIcon(f.visited) });
-  marker.bindPopup(() => buildPopup(f), { maxWidth: 280 });
+  if (old) { state.visitedLayer.removeLayer(old); state.unvisitedLayer.removeLayer(old); }
+  const marker = L.marker([f.lat, f.lng], { icon: createIcon(f) });
+  marker.bindPopup(() => buildPopup(f), { maxWidth: 300 });
   if (f.visited) marker.addTo(state.visitedLayer);
   else marker.addTo(state.unvisitedLayer);
   state.markers.set(f.id, marker);
+}
+
+function renderAll() {
+  const total = state.falls.length;
+  const visited = state.falls.filter(f => f.visited).length;
+  document.getElementById('hero-visited').textContent = visited;
+  document.getElementById('hero-total').textContent = total;
+
+  // current rank
+  const rankEl = document.getElementById('hero-rank');
+  let currentBadge = null;
+  for (const b of BADGES) if (visited >= b.req) currentBadge = b;
+  if (currentBadge) {
+    rankEl.style.display = '';
+    rankEl.querySelector('.badge').innerHTML = `${currentBadge.icon}　${currentBadge.name} 達成`;
+  } else { rankEl.style.display = 'none'; }
+
+  // badges grid
+  const badgesEl = document.getElementById('badges');
+  badgesEl.innerHTML = BADGES.map(b => `
+    <div class="badge-card ${visited >= b.req ? 'unlocked' : ''}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-req">${b.req}滝</div>
+    </div>
+  `).join('');
+
+  // regions
+  const regionStats = {};
+  REGION_ORDER.forEach(r => regionStats[r] = { total: 0, visited: 0 });
+  state.falls.forEach(f => {
+    const r = PREF_TO_REGION[f.pref] || '不明';
+    if (!regionStats[r]) regionStats[r] = { total: 0, visited: 0 };
+    regionStats[r].total++;
+    if (f.visited) regionStats[r].visited++;
+  });
+  const regionsEl = document.getElementById('regions');
+  regionsEl.innerHTML = REGION_ORDER.map(r => {
+    const s = regionStats[r] || { total: 0, visited: 0 };
+    const pct = s.total ? (s.visited / s.total * 100) : 0;
+    return `
+      <div class="region-card">
+        <div class="region-name">${r}</div>
+        <div class="region-progress"><div class="fill" style="width:${pct}%"></div></div>
+        <div class="region-stat"><span class="num">${s.visited}</span> / ${s.total} 滝</div>
+      </div>
+    `;
+  }).join('');
+
+  // gallery
+  const galleryEl = document.getElementById('gallery');
+  const visitedFalls = state.falls.filter(f => f.visited).sort((a, b) => (b.visitDate || '').localeCompare(a.visitDate || ''));
+  if (visitedFalls.length === 0) {
+    galleryEl.innerHTML = '<div class="gallery-empty">最初の一滝を、ここから</div>';
+  } else {
+    galleryEl.innerHTML = visitedFalls.map(f => {
+      const img = f.imageUrl
+        ? `<img class="gallery-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-fallback').style.display='flex'; this.style.display='none'" />`
+        : '';
+      return `
+        <a class="gallery-card" href="${f.notionUrl}" target="_blank" rel="noopener">
+          ${img}
+          <div class="gallery-img-fallback" style="display:${f.imageUrl ? 'none' : 'flex'}">💧</div>
+          <div class="gallery-body">
+            <div class="gallery-name">${THREE_GREATS.has(f.name) ? '👑 ' : ''}${f.name}</div>
+            <div class="gallery-meta">
+              <span class="gallery-pref">${f.pref || ''}</span>
+              <span class="gallery-date">${f.visitDate || ''}</span>
+            </div>
+          </div>
+        </a>
+      `;
+    }).join('');
+  }
 }
 
 async function loadFalls() {
@@ -261,22 +544,19 @@ async function loadFalls() {
 
 (async function() {
   try {
-    setSync('● 読み込み中...', '');
+    setSync('● 読込中', '');
     const data = await loadFalls();
     state.falls = data.falls.filter(f => f.lat != null && f.lng != null);
     state.falls.forEach(f => state.byId.set(f.id, f));
 
     state.map = L.map('map', {
-      center: [36.5, 137.5],
-      zoom: 5,
-      minZoom: 4,
-      maxZoom: 15,
-      zoomControl: true,
+      center: [37.0, 137.5], zoom: 5, minZoom: 4, maxZoom: 16,
+      zoomControl: true, scrollWheelZoom: true,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: 'abcd',
+    // 地形マップ：Esri World Topo（地形が見えて滝の位置が映える）
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, USGS',
       maxZoom: 19,
     }).addTo(state.map);
 
@@ -284,7 +564,7 @@ async function loadFalls() {
     state.unvisitedLayer = L.layerGroup().addTo(state.map);
 
     state.falls.forEach(f => replaceMarker(f));
-    updateStats();
+    renderAll();
     setSync('✓ Notion接続', 'ok');
     document.getElementById('loading').style.display = 'none';
 
@@ -293,25 +573,18 @@ async function loadFalls() {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const f = btn.dataset.filter;
-        if (f === 'all') {
-          state.map.addLayer(state.visitedLayer);
-          state.map.addLayer(state.unvisitedLayer);
-        } else if (f === 'visited') {
-          state.map.addLayer(state.visitedLayer);
-          state.map.removeLayer(state.unvisitedLayer);
-        } else {
-          state.map.removeLayer(state.visitedLayer);
-          state.map.addLayer(state.unvisitedLayer);
-        }
+        if (f === 'all') { state.map.addLayer(state.visitedLayer); state.map.addLayer(state.unvisitedLayer); }
+        else if (f === 'visited') { state.map.addLayer(state.visitedLayer); state.map.removeLayer(state.unvisitedLayer); }
+        else { state.map.removeLayer(state.visitedLayer); state.map.addLayer(state.unvisitedLayer); }
       });
     });
   } catch (err) {
     console.error(err);
     document.getElementById('loading').innerHTML = `
-      <div style="text-align: center;">
-        <div style="font-size: 14px; color: var(--accent); margin-bottom: 8px;">読み込みに失敗しました</div>
-        <div style="font-size: 11px; color: var(--text-dim);">${err.message || err}</div>
-        <button onclick="location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer;">リトライ</button>
+      <div style="text-align:center; font-family:var(--serif); letter-spacing:0.2em;">
+        <div style="font-size:14px; color:var(--accent-2); margin-bottom:12px;">読み込みに失敗</div>
+        <div style="font-size:11px; color:var(--text-dim);">${err.message || err}</div>
+        <button onclick="location.reload()" style="margin-top:20px; padding:10px 24px; background:var(--accent); color:#fff; border:none; border-radius:2px; font-family:var(--serif); letter-spacing:0.2em; cursor:pointer;">RETRY</button>
       </div>
     `;
   }
