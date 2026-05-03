@@ -1,8 +1,10 @@
 // 滝マップ Notion プロキシ Worker
 // GET  /api/falls                        — 全滝データ取得
+// POST /api/falls                        — 新規滝追加 { name, pref, lat, lng, description?, imageUrl? }
 // POST /api/falls/:pageId/visit          — 「行った」true + 行った日=今日
 // POST /api/falls/:pageId/unvisit        — 「行った」false + 行った日クリア
 // POST /api/falls/:pageId/coords         — 緯度経度更新 { lat, lng }
+// POST /api/falls/:pageId/description    — 解説更新 { description }
 
 const NOTION_VERSION = "2022-06-28";
 
@@ -21,13 +23,17 @@ export default {
     }
 
     try {
-      // GET /api/falls
       if (url.pathname === "/api/falls" && request.method === "GET") {
         const data = await fetchAllFalls(env);
         return json(data, cors);
       }
 
-      // POST /api/falls/:pageId/visit | unvisit
+      if (url.pathname === "/api/falls" && request.method === "POST") {
+        const body = await request.json();
+        const result = await createFall(body, env);
+        return json(result, cors);
+      }
+
       const visitMatch = url.pathname.match(/^\/api\/falls\/([0-9a-f-]+)\/(visit|unvisit)$/i);
       if (visitMatch && request.method === "POST") {
         const [, pageId, action] = visitMatch;
@@ -35,7 +41,6 @@ export default {
         return json(result, cors);
       }
 
-      // POST /api/falls/:pageId/coords
       const coordsMatch = url.pathname.match(/^\/api\/falls\/([0-9a-f-]+)\/coords$/i);
       if (coordsMatch && request.method === "POST") {
         const [, pageId] = coordsMatch;
@@ -44,7 +49,14 @@ export default {
         return json(result, cors);
       }
 
-      // ヘルスチェック
+      const descMatch = url.pathname.match(/^\/api\/falls\/([0-9a-f-]+)\/description$/i);
+      if (descMatch && request.method === "POST") {
+        const [, pageId] = descMatch;
+        const body = await request.json();
+        const result = await updateDescription(pageId, body.description, env);
+        return json(result, cors);
+      }
+
       if (url.pathname === "/" || url.pathname === "/api/health") {
         return json({ ok: true, service: "taki-map-api" }, cors);
       }
@@ -104,12 +116,12 @@ async function fetchAllFalls(env) {
       const lng = p["経度"]?.number;
       const visited = p["行った"]?.checkbox || false;
       const visitDate = p["行った日"]?.date?.start || null;
+      const description = textOf(p["解説"]?.rich_text);
       const imageFiles = p["イメージ画"]?.files || [];
-      // external URLのみ取得（attachmentは期限切れする）
       const imageUrl = imageFiles.find(f => f.external)?.external?.url || null;
       const evidenceFiles = p["証拠写真"]?.files || [];
       const evidenceUrl = evidenceFiles.find(f => f.external)?.external?.url
-                        || (evidenceFiles[0]?.file?.url ?? null); // 期限つきだが訪問直後は使える
+                        || (evidenceFiles[0]?.file?.url ?? null);
       falls.push({
         id: page.id,
         name,
@@ -118,6 +130,7 @@ async function fetchAllFalls(env) {
         lng,
         visited,
         visitDate,
+        description,
         notionUrl: page.url,
         imageUrl,
         evidenceUrl,
@@ -131,6 +144,40 @@ async function fetchAllFalls(env) {
 function textOf(arr) {
   if (!arr || !Array.isArray(arr) || arr.length === 0) return "";
   return arr.map(t => t.plain_text || "").join("");
+}
+
+async function createFall(body, env) {
+  const { name, pref, lat, lng, description, imageUrl } = body || {};
+  if (!name || typeof lat !== "number" || typeof lng !== "number") {
+    throw new Error("name, lat, lng are required");
+  }
+  const properties = {
+    "滝名": { title: [{ text: { content: name } }] },
+    "都道府県": { rich_text: [{ text: { content: pref || "" } }] },
+    "緯度": { number: lat },
+    "経度": { number: lng },
+    "行った": { checkbox: false },
+  };
+  if (description) {
+    properties["解説"] = { rich_text: [{ text: { content: description } }] };
+  }
+  if (imageUrl) {
+    properties["イメージ画"] = {
+      files: [{ name: name + " image", external: { url: imageUrl } }],
+    };
+  }
+  const data = await notionFetch(
+    `/v1/pages`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        parent: { database_id: env.DATABASE_ID },
+        properties,
+      }),
+    },
+    env
+  );
+  return { ok: true, id: data.id, url: data.url };
 }
 
 async function toggleVisit(pageId, visited, env) {
@@ -161,4 +208,16 @@ async function updateCoords(pageId, lat, lng, env) {
     env
   );
   return { ok: true, pageId, lat, lng };
+}
+
+async function updateDescription(pageId, description, env) {
+  const properties = {
+    "解説": { rich_text: description ? [{ text: { content: description } }] : [] },
+  };
+  await notionFetch(
+    `/v1/pages/${pageId}`,
+    { method: "PATCH", body: JSON.stringify({ properties }) },
+    env
+  );
+  return { ok: true, pageId };
 }

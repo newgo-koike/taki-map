@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-<title>日本の滝百選｜小池雄悟の制覇録</title>
+<title>日本の滝マップ｜小池雄悟</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
     --text: #ecf0f5;
     --text-2: #aebac8;
     --text-dim: #6f7d8e;
-    --accent: #d63a3a;        /* 朱 */
+    --accent: #d63a3a;
     --accent-2: #ff6b6b;
     --accent-glow: rgba(214, 58, 58, 0.55);
     --water: #4ea7d8;
@@ -36,35 +36,37 @@
   .hero {
     position: relative; height: 92vh; min-height: 560px;
     background:
-      linear-gradient(180deg, rgba(6,10,16,0.45) 0%, rgba(6,10,16,0.35) 40%, var(--bg-deep) 100%),
-      url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Nachi_Falls_in_2015-3-13.jpg/1920px-Nachi_Falls_in_2015-3-13.jpg') center/cover no-repeat,
+      linear-gradient(180deg, rgba(6,10,16,0.15) 0%, rgba(6,10,16,0.05) 30%, rgba(6,10,16,0.55) 70%, var(--bg-deep) 100%),
+      url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Shiraito_Falls_%2834257542610%29.jpg/1920px-Shiraito_Falls_%2834257542610%29.jpg') center 35% / cover no-repeat,
       linear-gradient(180deg, #1a2c3d, #060a10);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 0 20px; overflow: hidden;
   }
   .hero::before {
     content: ""; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(6,10,16,0.6) 80%);
+    background: radial-gradient(ellipse at center 35%, transparent 0%, rgba(6,10,16,0.45) 80%);
     pointer-events: none;
   }
   .hero-inner { position: relative; z-index: 2; max-width: 720px; }
   .hero-kicker {
     font-family: var(--serif); font-size: 13px; letter-spacing: 0.5em; color: var(--water-2);
     margin-bottom: 24px; text-indent: 0.5em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
   }
   .hero-title {
     font-family: var(--serif); font-weight: 700; font-size: clamp(40px, 7vw, 84px);
     line-height: 1.1; margin: 0 0 12px; letter-spacing: 0.05em;
-    text-shadow: 0 4px 30px rgba(0,0,0,0.7);
+    text-shadow: 0 4px 30px rgba(0,0,0,0.85);
   }
   .hero-sub {
-    font-family: var(--serif); font-size: clamp(13px, 1.5vw, 17px); color: var(--text-2);
+    font-family: var(--serif); font-size: clamp(13px, 1.5vw, 17px); color: var(--text);
     margin-bottom: 48px; letter-spacing: 0.1em; line-height: 1.8;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.8);
   }
   .hero-counter {
     display: inline-flex; align-items: baseline; gap: 4px;
-    padding: 18px 36px; border: 1px solid rgba(214,58,58,0.4);
-    background: rgba(6,10,16,0.55); backdrop-filter: blur(12px);
+    padding: 18px 36px; border: 1px solid rgba(214,58,58,0.5);
+    background: rgba(6,10,16,0.65); backdrop-filter: blur(12px);
     border-radius: 4px;
   }
   .hero-counter .num {
@@ -75,17 +77,16 @@
   .hero-counter .slash { font-family: var(--serif); font-size: 32px; color: var(--text-dim); margin: 0 8px; }
   .hero-counter .total { font-family: var(--serif); font-size: 32px; color: var(--text-2); }
   .hero-counter .lbl { font-family: var(--serif); font-size: 11px; color: var(--text-dim); letter-spacing: 0.4em; margin-left: 14px; align-self: center; }
-
   .hero-rank {
     margin-top: 28px; font-family: var(--serif);
     font-size: 14px; letter-spacing: 0.3em; color: var(--gold);
   }
-  .hero-rank .badge { display: inline-block; padding: 6px 16px; border: 1px solid rgba(212,175,55,0.4); border-radius: 2px; background: rgba(212,175,55,0.05); }
-
+  .hero-rank .badge { display: inline-block; padding: 6px 16px; border: 1px solid rgba(212,175,55,0.45); border-radius: 2px; background: rgba(6,10,16,0.5); }
   .hero-scroll {
     position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
-    font-family: var(--serif); font-size: 11px; letter-spacing: 0.4em; color: var(--text-2);
+    font-family: var(--serif); font-size: 11px; letter-spacing: 0.4em; color: var(--text);
     z-index: 2; opacity: 0.85;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
     animation: bob 2.4s ease-in-out infinite;
   }
   @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
@@ -98,16 +99,12 @@
     border-bottom: 1px solid var(--line);
     position: sticky; top: 0; z-index: 500;
   }
-  .map-bar h2 {
-    font-family: var(--serif); font-weight: 700; font-size: 16px;
-    margin: 0 8px 0 0; letter-spacing: 0.15em;
-  }
+  .map-bar h2 { font-family: var(--serif); font-weight: 700; font-size: 16px; margin: 0 8px 0 0; letter-spacing: 0.15em; }
   .map-bar h2 .accent { color: var(--accent-2); }
   .filter-btn {
     background: transparent; border: 1px solid var(--line); color: var(--text-dim);
     padding: 6px 14px; border-radius: 2px; font-size: 12px; cursor: pointer;
-    font-family: var(--serif); letter-spacing: 0.1em;
-    transition: all 0.15s;
+    font-family: var(--serif); letter-spacing: 0.1em; transition: all 0.15s;
   }
   .filter-btn:hover { border-color: var(--accent); color: var(--text); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -116,6 +113,36 @@
   .sync.err { color: var(--accent-2); }
 
   #map { height: 78vh; min-height: 540px; background: var(--bg); }
+  #map.adding { cursor: crosshair; }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 28px; right: 28px; z-index: 600;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--accent); color: #fff; border: none;
+    font-size: 32px; font-weight: 300; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(214,58,58,0.5);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .fab:hover { transform: scale(1.1) rotate(90deg); background: var(--accent-2); }
+  .fab.cancel { background: var(--text-dim); transform: rotate(45deg); }
+
+  .add-hint {
+    position: fixed; bottom: 100px; right: 28px; z-index: 600;
+    background: var(--panel); border: 1px solid var(--accent); color: var(--text);
+    padding: 12px 18px; border-radius: 4px;
+    font-family: var(--serif); font-size: 12px; letter-spacing: 0.1em;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s;
+  }
+  .add-hint::after {
+    content: ""; position: absolute; right: 28px; bottom: -8px;
+    width: 0; height: 0;
+    border-left: 8px solid transparent; border-right: 8px solid transparent;
+    border-top: 8px solid var(--accent);
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
   /* ========== PINS ========== */
   .pin-wrap {
@@ -146,7 +173,7 @@
     border: 1px solid var(--line);
   }
   .leaflet-popup-tip { background: var(--panel); }
-  .leaflet-popup-content { margin: 16px 18px; min-width: 240px; }
+  .leaflet-popup-content { margin: 16px 18px; min-width: 240px; max-width: 280px; }
   .pop-three { font-family: var(--serif); font-size: 10px; color: var(--gold); letter-spacing: 0.3em; margin-bottom: 4px; }
   .pop-title { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 4px; }
   .pop-pref { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; letter-spacing: 0.1em; }
@@ -159,6 +186,12 @@
   .pop-status.unvisited { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--line); }
   .pop-date { font-size: 11px; color: var(--water-2); margin-bottom: 12px; font-family: var(--serif); letter-spacing: 0.1em; }
   .pop-img { width: 100%; max-height: 160px; object-fit: cover; border-radius: 2px; margin-bottom: 12px; }
+  .pop-desc {
+    font-size: 12px; color: var(--text-2); line-height: 1.7;
+    margin-bottom: 14px; padding: 10px 12px;
+    background: var(--bg); border-left: 2px solid var(--water);
+    border-radius: 2px;
+  }
   .pop-actions { display: flex; flex-direction: column; gap: 6px; }
   .pop-btn {
     display: block; text-align: center; padding: 10px; border-radius: 2px;
@@ -171,34 +204,62 @@
   .pop-btn.ghost { background: transparent; color: var(--text-2); border: 1px solid var(--line); }
   .pop-btn.ghost:hover { color: var(--text); border-color: var(--accent); }
 
-  /* ========== COLLECTION SECTION ========== */
+  /* ========== MODAL ========== */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(6,10,16,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9000; padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    padding: 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .modal h3 { font-family: var(--serif); font-size: 22px; margin: 0 0 4px; letter-spacing: 0.15em; }
+  .modal .modal-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.2em; font-family: var(--serif); margin-bottom: 24px; }
+  .modal-coords {
+    background: var(--bg); padding: 10px 14px; border-radius: 4px;
+    font-family: var(--serif); font-size: 12px; color: var(--water-2);
+    margin-bottom: 18px; letter-spacing: 0.1em;
+  }
+  .modal label { display: block; margin-bottom: 14px; }
+  .modal label .lbl { display: block; font-family: var(--serif); font-size: 11px; color: var(--text-dim); letter-spacing: 0.2em; margin-bottom: 6px; }
+  .modal input, .modal select, .modal textarea {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 3px;
+    color: var(--text); font-size: 14px; font-family: var(--sans);
+  }
+  .modal textarea { min-height: 80px; resize: vertical; font-family: var(--sans); }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-btn {
+    flex: 1; padding: 12px; border-radius: 3px; border: none; cursor: pointer;
+    font-family: var(--serif); font-size: 13px; letter-spacing: 0.2em; transition: all 0.15s;
+  }
+  .modal-btn.primary { background: var(--accent); color: #fff; }
+  .modal-btn.primary:hover { background: var(--accent-2); }
+  .modal-btn.primary:disabled { opacity: 0.5; cursor: wait; }
+  .modal-btn.ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--line); }
+  .modal-btn.ghost:hover { color: var(--text); }
+
+  /* ========== COLLECTION ========== */
   .collection {
     padding: 80px 24px 100px;
-    background:
-      radial-gradient(ellipse at top, rgba(78,167,216,0.05) 0%, transparent 50%),
-      var(--bg-deep);
+    background: radial-gradient(ellipse at top, rgba(78,167,216,0.05) 0%, transparent 50%), var(--bg-deep);
     border-top: 1px solid var(--line);
   }
   .collection-inner { max-width: 1200px; margin: 0 auto; }
-  .section-title {
-    font-family: var(--serif); font-size: 28px; font-weight: 700;
-    text-align: center; letter-spacing: 0.4em; margin: 0 0 8px;
-  }
+  .section-title { font-family: var(--serif); font-size: 28px; font-weight: 700; text-align: center; letter-spacing: 0.4em; margin: 0 0 8px; }
   .section-title .accent { color: var(--accent-2); }
-  .section-sub {
-    text-align: center; font-family: var(--serif); font-size: 12px;
-    color: var(--text-dim); letter-spacing: 0.3em; margin-bottom: 56px;
-  }
+  .section-sub { text-align: center; font-family: var(--serif); font-size: 12px; color: var(--text-dim); letter-spacing: 0.3em; margin-bottom: 56px; }
 
-  /* 達成バッジ */
-  .badges-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 16px; margin-bottom: 80px;
-  }
+  .badges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 80px; }
   .badge-card {
     background: var(--panel); border: 1px solid var(--line);
     padding: 24px 16px; text-align: center; border-radius: 4px;
-    position: relative; transition: all 0.25s;
+    transition: all 0.25s;
   }
   .badge-card.unlocked {
     border-color: rgba(212,175,55,0.4);
@@ -211,38 +272,22 @@
   .badge-card.unlocked .badge-name { color: var(--gold); }
   .badge-req { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.1em; }
 
-  /* 地域別制覇 */
-  .regions-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px; margin-bottom: 80px;
-  }
-  .region-card {
-    background: var(--panel); border: 1px solid var(--line);
-    padding: 18px 20px; border-radius: 4px;
-  }
+  .regions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 80px; }
+  .region-card { background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; border-radius: 4px; }
   .region-name { font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: 0.2em; margin-bottom: 8px; }
-  .region-progress {
-    height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden;
-    margin-bottom: 8px;
-  }
+  .region-progress { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
   .region-progress .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s; }
   .region-stat { font-size: 11px; color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.1em; }
   .region-stat .num { color: var(--accent-2); font-weight: 700; }
 
-  /* ギャラリー */
-  .gallery-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-  }
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
   .gallery-card {
     background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
-    overflow: hidden; cursor: pointer; transition: all 0.25s;
+    overflow: hidden; cursor: pointer; transition: all 0.25s; text-decoration: none; color: inherit;
+    display: block;
   }
   .gallery-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(214,58,58,0.15); }
-  .gallery-img {
-    width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
-    background: var(--panel-2);
-  }
+  .gallery-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; background: var(--panel-2); }
   .gallery-img-fallback {
     width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, #1a2c3d, var(--panel-2));
@@ -253,12 +298,12 @@
   .gallery-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
   .gallery-pref { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; }
   .gallery-date { font-size: 11px; color: var(--water-2); font-family: var(--serif); }
-  .gallery-empty {
-    grid-column: 1/-1; text-align: center; padding: 60px 20px;
-    color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.2em;
+  .gallery-desc {
+    font-size: 11px; color: var(--text-dim); line-height: 1.6; margin-top: 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
+  .gallery-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.2em; }
 
-  /* footer */
   footer {
     padding: 40px 20px; text-align: center; font-size: 11px;
     color: var(--text-dim); font-family: var(--serif); letter-spacing: 0.2em;
@@ -266,17 +311,12 @@
   }
   footer .heart { color: var(--accent-2); }
 
-  /* loading */
   .loading-overlay {
     position: fixed; inset: 0; background: var(--bg-deep);
     display: flex; align-items: center; justify-content: center;
     z-index: 9999; flex-direction: column; gap: 16px;
   }
-  .spinner {
-    width: 40px; height: 40px; border: 2px solid var(--line);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
+  .spinner { width: 40px; height: 40px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .leaflet-control-attribution { font-size: 9px; }
@@ -289,6 +329,7 @@
     .map-bar h2 { font-size: 13px; width: 100%; }
     .collection { padding: 56px 14px 80px; }
     .section-title { font-size: 22px; letter-spacing: 0.3em; }
+    .fab { width: 52px; height: 52px; font-size: 28px; bottom: 20px; right: 20px; }
   }
 </style>
 </head>
@@ -302,14 +343,14 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-inner">
-    <div class="hero-kicker">日本の滝百選</div>
+    <div class="hero-kicker">日本の滝マップ</div>
     <h1 class="hero-title">水と岩と森</h1>
-    <p class="hero-sub">日本列島の地形が刻み続けてきた、98の聖なる落差。<br>その一滝一滝を、自分の足で訪ねる記録。</p>
+    <p class="hero-sub">日本列島が刻んできた落差を、<br>ひと滝ずつ自分の足で訪ねる記録。</p>
     <div class="hero-counter">
       <span class="num" id="hero-visited">0</span>
       <span class="slash">/</span>
-      <span class="total" id="hero-total">98</span>
-      <span class="lbl">制覇</span>
+      <span class="total" id="hero-total">0</span>
+      <span class="lbl">達成</span>
     </div>
     <div class="hero-rank" id="hero-rank" style="display:none;"><span class="badge"></span></div>
   </div>
@@ -328,11 +369,45 @@
   <div id="map"></div>
 </section>
 
+<button class="fab" id="add-btn" title="行きたい滝を追加">+</button>
+<div class="add-hint" id="add-hint" hidden>地図上で<strong>場所をクリック</strong>して滝を追加</div>
+
+<!-- ADD MODAL -->
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal">
+    <h3>滝を追加</h3>
+    <div class="modal-sub">— ADD A WATERFALL —</div>
+    <div class="modal-coords" id="modal-coords">📍 -</div>
+    <label>
+      <span class="lbl">滝の名前 *</span>
+      <input id="m-name" placeholder="例：竜頭の滝" autocomplete="off" />
+    </label>
+    <label>
+      <span class="lbl">都道府県</span>
+      <select id="m-pref">
+        <option value="">— 選択 —</option>
+      </select>
+    </label>
+    <label>
+      <span class="lbl">解説（任意）</span>
+      <textarea id="m-desc" placeholder="この滝のメモ・由来・感想など"></textarea>
+    </label>
+    <label>
+      <span class="lbl">画像URL（任意）</span>
+      <input id="m-img" placeholder="https://..." autocomplete="off" />
+    </label>
+    <div class="modal-actions">
+      <button class="modal-btn ghost" id="m-cancel">キャンセル</button>
+      <button class="modal-btn primary" id="m-save">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- COLLECTION -->
 <section class="collection">
   <div class="collection-inner">
 
-    <h2 class="section-title">制覇 <span class="accent">の道</span></h2>
+    <h2 class="section-title">滝 <span class="accent">の旅路</span></h2>
     <p class="section-sub">— ACHIEVEMENT —</p>
     <div class="badges-grid" id="badges"></div>
 
@@ -358,30 +433,32 @@ const API_URL = 'https://taki-map-api.newgo-koike.workers.dev/api';
 
 const THREE_GREATS = new Set(['華厳の滝', '那智の滝', '袋田の滝']);
 
+const PREFS = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
+
 const PREF_TO_REGION = {
-  '北海道': '北海道',
-  '青森県': '東北', '秋田県': '東北', '岩手県': '東北', '山形県': '東北', '宮城県': '東北', '福島県': '東北',
-  '茨城県': '関東', '栃木県': '関東', '群馬県': '関東', '埼玉県': '関東', '千葉県': '関東', '東京都': '関東', '神奈川県': '関東',
-  '新潟県': '中部', '富山県': '中部', '石川県': '中部', '福井県': '中部', '山梨県': '中部', '長野県': '中部', '岐阜県': '中部', '静岡県': '中部', '愛知県': '中部',
-  '三重県': '近畿', '滋賀県': '近畿', '京都府': '近畿', '大阪府': '近畿', '兵庫県': '近畿', '奈良県': '近畿', '和歌山県': '近畿',
-  '鳥取県': '中国', '島根県': '中国', '岡山県': '中国', '広島県': '中国', '山口県': '中国',
-  '徳島県': '四国', '香川県': '四国', '愛媛県': '四国', '高知県': '四国',
-  '福岡県': '九州', '佐賀県': '九州', '長崎県': '九州', '熊本県': '九州', '大分県': '九州', '宮崎県': '九州', '鹿児島県': '九州',
-  '沖縄県': '沖縄',
+  '北海道':'北海道',
+  '青森県':'東北','秋田県':'東北','岩手県':'東北','山形県':'東北','宮城県':'東北','福島県':'東北',
+  '茨城県':'関東','栃木県':'関東','群馬県':'関東','埼玉県':'関東','千葉県':'関東','東京都':'関東','神奈川県':'関東',
+  '新潟県':'中部','富山県':'中部','石川県':'中部','福井県':'中部','山梨県':'中部','長野県':'中部','岐阜県':'中部','静岡県':'中部','愛知県':'中部',
+  '三重県':'近畿','滋賀県':'近畿','京都府':'近畿','大阪府':'近畿','兵庫県':'近畿','奈良県':'近畿','和歌山県':'近畿',
+  '鳥取県':'中国','島根県':'中国','岡山県':'中国','広島県':'中国','山口県':'中国',
+  '徳島県':'四国','香川県':'四国','愛媛県':'四国','高知県':'四国',
+  '福岡県':'九州','佐賀県':'九州','長崎県':'九州','熊本県':'九州','大分県':'九州','宮崎県':'九州','鹿児島県':'九州',
+  '沖縄県':'沖縄',
 };
-const REGION_ORDER = ['北海道', '東北', '関東', '中部', '近畿', '中国', '四国', '九州', '沖縄'];
+const REGION_ORDER = ['北海道','東北','関東','中部','近畿','中国','四国','九州','沖縄'];
 
 const BADGES = [
-  { req: 1,  icon: '🌱', name: '初滝',   key: 'first' },
-  { req: 5,  icon: '🍃', name: '五滝',   key: 'five' },
-  { req: 10, icon: '🌿', name: '拾滝',   key: 'ten' },
-  { req: 25, icon: '🏆', name: '廿五滝', key: 'twentyfive' },
-  { req: 50, icon: '⭐', name: '半達成', key: 'half' },
-  { req: 75, icon: '💎', name: '七十五', key: 'seventyfive' },
-  { req: 98, icon: '👑', name: '完全制覇', key: 'all' },
+  { req: 1,   icon: '🌱', name: '初滝' },
+  { req: 5,   icon: '🍃', name: '五滝' },
+  { req: 10,  icon: '🌿', name: '拾滝' },
+  { req: 25,  icon: '🏆', name: '廿五滝' },
+  { req: 50,  icon: '⭐', name: '半百' },
+  { req: 75,  icon: '💎', name: '七十五' },
+  { req: 100, icon: '👑', name: '百滝' },
 ];
 
-const state = { falls: [], byId: new Map(), markers: new Map(), map: null, visitedLayer: null, unvisitedLayer: null };
+const state = { falls: [], byId: new Map(), markers: new Map(), map: null, visitedLayer: null, unvisitedLayer: null, addMode: false, pendingLatLng: null };
 
 function setSync(text, cls) {
   const el = document.getElementById('sync');
@@ -389,23 +466,22 @@ function setSync(text, cls) {
   el.className = 'sync ' + (cls || '');
 }
 
-function pinSVG(visited, isThreeGreat) {
+function pinSVG(visited) {
   const fill = visited ? '#d63a3a' : '#5d6c80';
   const stroke = visited ? '#fff' : '#cfd6df';
   const inner = visited ? '#fff' : '#0c1218';
-  const innerR = 4.2;
   return `
     <svg class="pin-svg" viewBox="0 0 28 38" xmlns="http://www.w3.org/2000/svg">
       <path d="M14 1 C5.2 13.5 1 19 1 24.5 a13 13 0 0 0 26 0 C27 19 22.8 13.5 14 1 Z"
             fill="${fill}" stroke="${stroke}" stroke-width="1.6" stroke-linejoin="round"/>
-      <circle cx="14" cy="22" r="${innerR}" fill="${inner}"/>
+      <circle cx="14" cy="22" r="4.2" fill="${inner}"/>
     </svg>
   `;
 }
 
 function createIcon(f) {
   const isGreat = THREE_GREATS.has(f.name);
-  const html = `<div class="pin-wrap ${f.visited ? 'visited' : ''}">${pinSVG(f.visited, isGreat)}${isGreat ? '<div class="pin-crown">👑</div>' : ''}</div>`;
+  const html = `<div class="pin-wrap ${f.visited ? 'visited' : ''}">${pinSVG(f.visited)}${isGreat ? '<div class="pin-crown">👑</div>' : ''}</div>`;
   return L.divIcon({ className: '', html, iconSize: [28, 38], iconAnchor: [14, 38], popupAnchor: [0, -34] });
 }
 
@@ -419,12 +495,13 @@ function buildPopup(f) {
   const img = f.imageUrl
     ? `<img class="pop-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.style.display='none'" />`
     : '';
+  const desc = f.description ? `<div class="pop-desc">${escapeHtml(f.description)}</div>` : '';
   const great = isGreat ? '<div class="pop-three">日本三大瀑布 👑</div>' : '';
   wrap.innerHTML = `
     ${great}
-    <div class="pop-title">${f.name}</div>
-    <div class="pop-pref">${f.pref || ''}</div>
-    ${status}${date}${img}
+    <div class="pop-title">${escapeHtml(f.name)}</div>
+    <div class="pop-pref">${escapeHtml(f.pref || '')}</div>
+    ${status}${date}${img}${desc}
     <div class="pop-actions">
       <button class="pop-btn primary" data-action="toggle">${f.visited ? '未訪に戻す' : '✦ 行 っ た'}</button>
       <a class="pop-btn ghost" href="${f.notionUrl}" target="_blank" rel="noopener">Notionで詳細</a>
@@ -452,6 +529,10 @@ function buildPopup(f) {
   return wrap;
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function replaceMarker(f) {
   const old = state.markers.get(f.id);
   if (old) { state.visitedLayer.removeLayer(old); state.unvisitedLayer.removeLayer(old); }
@@ -468,7 +549,6 @@ function renderAll() {
   document.getElementById('hero-visited').textContent = visited;
   document.getElementById('hero-total').textContent = total;
 
-  // current rank
   const rankEl = document.getElementById('hero-rank');
   let currentBadge = null;
   for (const b of BADGES) if (visited >= b.req) currentBadge = b;
@@ -477,7 +557,6 @@ function renderAll() {
     rankEl.querySelector('.badge').innerHTML = `${currentBadge.icon}　${currentBadge.name} 達成`;
   } else { rankEl.style.display = 'none'; }
 
-  // badges grid
   const badgesEl = document.getElementById('badges');
   badgesEl.innerHTML = BADGES.map(b => `
     <div class="badge-card ${visited >= b.req ? 'unlocked' : ''}">
@@ -487,7 +566,6 @@ function renderAll() {
     </div>
   `).join('');
 
-  // regions
   const regionStats = {};
   REGION_ORDER.forEach(r => regionStats[r] = { total: 0, visited: 0 });
   state.falls.forEach(f => {
@@ -509,7 +587,6 @@ function renderAll() {
     `;
   }).join('');
 
-  // gallery
   const galleryEl = document.getElementById('gallery');
   const visitedFalls = state.falls.filter(f => f.visited).sort((a, b) => (b.visitDate || '').localeCompare(a.visitDate || ''));
   if (visitedFalls.length === 0) {
@@ -517,18 +594,20 @@ function renderAll() {
   } else {
     galleryEl.innerHTML = visitedFalls.map(f => {
       const img = f.imageUrl
-        ? `<img class="gallery-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-fallback').style.display='flex'; this.style.display='none'" />`
+        ? `<img class="gallery-img" src="${escapeHtml(f.imageUrl)}" alt="${escapeHtml(f.name)}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-fallback').style.display='flex'; this.style.display='none'" />`
         : '';
+      const desc = f.description ? `<div class="gallery-desc">${escapeHtml(f.description)}</div>` : '';
       return `
-        <a class="gallery-card" href="${f.notionUrl}" target="_blank" rel="noopener">
+        <a class="gallery-card" href="${escapeHtml(f.notionUrl)}" target="_blank" rel="noopener">
           ${img}
           <div class="gallery-img-fallback" style="display:${f.imageUrl ? 'none' : 'flex'}">💧</div>
           <div class="gallery-body">
-            <div class="gallery-name">${THREE_GREATS.has(f.name) ? '👑 ' : ''}${f.name}</div>
+            <div class="gallery-name">${THREE_GREATS.has(f.name) ? '👑 ' : ''}${escapeHtml(f.name)}</div>
             <div class="gallery-meta">
-              <span class="gallery-pref">${f.pref || ''}</span>
+              <span class="gallery-pref">${escapeHtml(f.pref || '')}</span>
               <span class="gallery-date">${f.visitDate || ''}</span>
             </div>
+            ${desc}
           </div>
         </a>
       `;
@@ -540,6 +619,79 @@ async function loadFalls() {
   const res = await fetch(`${API_URL}/falls`, { cache: 'no-store' });
   if (!res.ok) throw new Error('API ' + res.status);
   return await res.json();
+}
+
+// ====== ADD MODE ======
+function setAddMode(on) {
+  state.addMode = on;
+  const btn = document.getElementById('add-btn');
+  const hint = document.getElementById('add-hint');
+  const mapEl = document.getElementById('map');
+  if (on) {
+    btn.classList.add('cancel');
+    btn.textContent = '+';
+    hint.hidden = false;
+    mapEl.classList.add('adding');
+  } else {
+    btn.classList.remove('cancel');
+    btn.textContent = '+';
+    hint.hidden = true;
+    mapEl.classList.remove('adding');
+  }
+}
+
+function openModal(latlng) {
+  state.pendingLatLng = latlng;
+  document.getElementById('modal-coords').textContent = `📍 ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+  document.getElementById('m-name').value = '';
+  document.getElementById('m-pref').value = '';
+  document.getElementById('m-desc').value = '';
+  document.getElementById('m-img').value = '';
+  document.getElementById('modal').hidden = false;
+  setTimeout(() => document.getElementById('m-name').focus(), 50);
+}
+
+function closeModal() {
+  document.getElementById('modal').hidden = true;
+  state.pendingLatLng = null;
+}
+
+async function saveNewFall() {
+  const name = document.getElementById('m-name').value.trim();
+  const pref = document.getElementById('m-pref').value;
+  const description = document.getElementById('m-desc').value.trim();
+  const imageUrl = document.getElementById('m-img').value.trim();
+  if (!name) { alert('滝の名前を入力してください'); return; }
+  const { lat, lng } = state.pendingLatLng;
+  const saveBtn = document.getElementById('m-save');
+  saveBtn.disabled = true; saveBtn.textContent = '保存中…';
+  setSync('● 追加中', '');
+  try {
+    const res = await fetch(`${API_URL}/falls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, pref, lat, lng, description, imageUrl: imageUrl || undefined }),
+    });
+    const result = await res.json();
+    if (!result.ok) throw new Error(result.error || 'failed');
+    // 新規データをstateに追加
+    const newFall = {
+      id: result.id, name, pref, lat, lng,
+      visited: false, visitDate: null, description,
+      notionUrl: result.url, imageUrl: imageUrl || null, evidenceUrl: null,
+    };
+    state.falls.push(newFall);
+    state.byId.set(newFall.id, newFall);
+    replaceMarker(newFall);
+    renderAll();
+    setSync('✓ 追加完了', 'ok');
+    closeModal();
+    setAddMode(false);
+  } catch (err) {
+    saveBtn.disabled = false; saveBtn.textContent = '追加する';
+    setSync('⚠ 追加失敗', 'err');
+    alert('失敗：' + (err.message || err));
+  }
 }
 
 (async function() {
@@ -554,7 +706,6 @@ async function loadFalls() {
       zoomControl: true, scrollWheelZoom: true,
     });
 
-    // 地形マップ：Esri World Topo（地形が見えて滝の位置が映える）
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, USGS',
       maxZoom: 19,
@@ -578,6 +729,29 @@ async function loadFalls() {
         else { state.map.removeLayer(state.visitedLayer); state.map.addLayer(state.unvisitedLayer); }
       });
     });
+
+    // 都道府県セレクト
+    const prefSel = document.getElementById('m-pref');
+    PREFS.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      prefSel.appendChild(opt);
+    });
+
+    // FAB
+    document.getElementById('add-btn').addEventListener('click', () => {
+      setAddMode(!state.addMode);
+    });
+    state.map.on('click', (e) => {
+      if (!state.addMode) return;
+      openModal(e.latlng);
+    });
+    document.getElementById('m-cancel').addEventListener('click', closeModal);
+    document.getElementById('m-save').addEventListener('click', saveNewFall);
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') closeModal();
+    });
+
   } catch (err) {
     console.error(err);
     document.getElementById('loading').innerHTML = `
