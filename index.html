@@ -39,7 +39,7 @@
   .progress-bar .fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.4s ease; }
 
   .controls {
-    display: flex; gap: 8px; padding: 8px 20px;
+    display: flex; gap: 8px; padding: 8px 20px; align-items: center;
     background: var(--panel-2); border-bottom: 1px solid var(--border);
     overflow-x: auto;
   }
@@ -50,6 +50,9 @@
   }
   .filter-btn:hover { border-color: var(--accent); color: var(--text); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .sync-status { margin-left: auto; font-size: 11px; color: var(--text-dim); }
+  .sync-status.ok { color: var(--ok); }
+  .sync-status.err { color: var(--accent); }
 
   #map { flex: 1; background: var(--panel); }
 
@@ -59,6 +62,7 @@
     border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 11px; font-weight: 700;
+    transition: transform 0.15s;
   }
   .pin.visited { background: var(--accent); }
   .pin.unvisited { background: var(--gray); opacity: 0.7; }
@@ -71,7 +75,7 @@
     border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   }
   .leaflet-popup-tip { background: var(--panel); }
-  .leaflet-popup-content { margin: 14px 16px; min-width: 220px; }
+  .leaflet-popup-content { margin: 14px 16px; min-width: 240px; }
   .pop-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
   .pop-pref { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
   .pop-status { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-bottom: 10px; }
@@ -79,14 +83,37 @@
   .pop-status.unvisited { background: var(--panel-2); color: var(--text-dim); }
   .pop-date { font-size: 11px; color: var(--ok); margin-bottom: 10px; }
   .pop-img { width: 100%; max-height: 140px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; }
-  .pop-link {
+  .pop-actions { display: flex; gap: 6px; flex-direction: column; }
+  .pop-btn {
     display: block; text-align: center; padding: 8px;
-    background: var(--accent); color: #fff; text-decoration: none;
-    border-radius: 6px; font-size: 12px; font-weight: 600;
+    text-decoration: none; border-radius: 6px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.15s;
   }
-  .pop-link:hover { background: var(--accent-2); }
+  .pop-btn.primary { background: var(--accent); color: #fff; }
+  .pop-btn.primary:hover { background: var(--accent-2); }
+  .pop-btn.primary:disabled { opacity: 0.5; cursor: wait; }
+  .pop-btn.secondary { background: var(--panel-2); color: var(--text-dim); border: 1px solid var(--border); }
+  .pop-btn.secondary:hover { color: var(--text); border-color: var(--accent); }
+  .pop-btn.ghost {
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .pop-btn.ghost:hover { color: var(--text); border-color: var(--accent); }
 
   .leaflet-control-attribution { font-size: 10px; }
+
+  .loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; flex-direction: column; gap: 12px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--panel-2);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 600px) {
     header.topbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
@@ -98,11 +125,16 @@
 </style>
 </head>
 <body>
+<div id="loading" class="loading-overlay">
+  <div class="spinner"></div>
+  <div style="font-size: 13px; color: var(--text-dim);">Notionから滝データを読み込んでいます…</div>
+</div>
+
 <div id="app">
   <header class="topbar">
     <div class="title-block">
       <h1>🌊 日本の滝マップ</h1>
-      <div class="sub">visited / total — クリックで詳細</div>
+      <div class="sub">クリックして「行った！」を記録 → Notionに自動同期</div>
     </div>
     <div class="stats">
       <div class="stat">
@@ -117,6 +149,7 @@
     <button class="filter-btn active" data-filter="all">すべて</button>
     <button class="filter-btn" data-filter="visited">行った（赤）</button>
     <button class="filter-btn" data-filter="unvisited">未訪問（灰）</button>
+    <span class="sync-status" id="sync-status">●</span>
   </div>
 
   <div id="map"></div>
@@ -125,91 +158,163 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-(async function() {
-  const res = await fetch('data.json?v=' + Date.now());
-  const data = await res.json();
-  const falls = data.falls;
+const API_URL = 'https://taki-map-api.newgo-koike.workers.dev/api';
 
-  const total = falls.length;
-  const visitedCount = falls.filter(f => f.visited).length;
-  document.getElementById('visited-count').textContent = visitedCount;
+const state = {
+  falls: [],
+  byId: new Map(),
+  markers: new Map(),
+  map: null,
+  visitedLayer: null,
+  unvisitedLayer: null,
+};
+
+function setSync(text, cls) {
+  const el = document.getElementById('sync-status');
+  el.textContent = text;
+  el.className = 'sync-status ' + (cls || '');
+}
+
+function updateStats() {
+  const total = state.falls.length;
+  const visited = state.falls.filter(f => f.visited).length;
+  document.getElementById('visited-count').textContent = visited;
   document.getElementById('total-count').textContent = total;
-  document.getElementById('progress-fill').style.width = (visitedCount / total * 100) + '%';
+  document.getElementById('progress-fill').style.width = (total ? visited / total * 100 : 0) + '%';
+}
 
-  const map = L.map('map', {
-    center: [36.5, 137.5],
-    zoom: 5,
-    minZoom: 4,
-    maxZoom: 15,
-    zoomControl: true,
+function createIcon(visited) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="pin ${visited ? 'visited' : 'unvisited'}">${visited ? '✓' : ''}</div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
   });
+}
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19,
-  }).addTo(map);
-
-  const visitedLayer = L.layerGroup().addTo(map);
-  const unvisitedLayer = L.layerGroup().addTo(map);
-
-  function createIcon(visited) {
-    return L.divIcon({
-      className: '',
-      html: `<div class="pin ${visited ? 'visited' : 'unvisited'}">${visited ? '✓' : ''}</div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
-    });
-  }
-
-  function buildPopup(f) {
-    const status = f.visited
-      ? '<span class="pop-status visited">行った</span>'
-      : '<span class="pop-status unvisited">未訪問</span>';
-    const date = f.visited && f.visitDate
-      ? `<div class="pop-date">📅 ${f.visitDate}</div>`
-      : '';
-    const img = f.imageUrl
-      ? `<img class="pop-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.style.display='none'" />`
-      : '';
-    return `
-      <div class="pop-title">${f.name}</div>
-      <div class="pop-pref">${f.pref}</div>
-      ${status}
-      ${date}
-      ${img}
-      <a class="pop-link" href="${f.notionUrl}" target="_blank" rel="noopener">Notionで詳細を見る →</a>
-    `;
-  }
-
-  falls.forEach(f => {
-    const marker = L.marker([f.lat, f.lng], { icon: createIcon(f.visited) });
-    marker.bindPopup(buildPopup(f), { maxWidth: 280 });
-    if (f.visited) {
-      marker.addTo(visitedLayer);
-    } else {
-      marker.addTo(unvisitedLayer);
+function buildPopup(f) {
+  const wrap = document.createElement('div');
+  const status = f.visited
+    ? '<span class="pop-status visited">行った</span>'
+    : '<span class="pop-status unvisited">未訪問</span>';
+  const date = f.visited && f.visitDate
+    ? `<div class="pop-date">📅 ${f.visitDate}</div>`
+    : '';
+  const img = f.imageUrl
+    ? `<img class="pop-img" src="${f.imageUrl}" alt="${f.name}" loading="lazy" onerror="this.style.display='none'" />`
+    : '';
+  wrap.innerHTML = `
+    <div class="pop-title">${f.name}</div>
+    <div class="pop-pref">${f.pref || ''}</div>
+    ${status}
+    ${date}
+    ${img}
+    <div class="pop-actions">
+      <button class="pop-btn primary" data-action="toggle">${f.visited ? '未訪問に戻す' : '🎉 行った！'}</button>
+      <a class="pop-btn ghost" href="${f.notionUrl}" target="_blank" rel="noopener">Notionで詳細を見る</a>
+    </div>
+  `;
+  wrap.querySelector('[data-action="toggle"]').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = '更新中…';
+    setSync('● 同期中...', '');
+    try {
+      const action = f.visited ? 'unvisit' : 'visit';
+      const res = await fetch(`${API_URL}/falls/${f.id}/${action}`, { method: 'POST' });
+      const result = await res.json();
+      if (!result.ok) throw new Error(result.error || 'failed');
+      f.visited = result.visited;
+      f.visitDate = result.visitDate;
+      replaceMarker(f);
+      updateStats();
+      setSync('✓ 同期OK', 'ok');
+      state.map.closePopup();
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = '失敗・もう一度';
+      setSync('⚠ 同期失敗', 'err');
     }
   });
+  return wrap;
+}
 
-  // フィルタ切り替え
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const f = btn.dataset.filter;
-      if (f === 'all') {
-        map.addLayer(visitedLayer);
-        map.addLayer(unvisitedLayer);
-      } else if (f === 'visited') {
-        map.addLayer(visitedLayer);
-        map.removeLayer(unvisitedLayer);
-      } else {
-        map.removeLayer(visitedLayer);
-        map.addLayer(unvisitedLayer);
-      }
+function replaceMarker(f) {
+  const old = state.markers.get(f.id);
+  if (old) {
+    state.visitedLayer.removeLayer(old);
+    state.unvisitedLayer.removeLayer(old);
+  }
+  const marker = L.marker([f.lat, f.lng], { icon: createIcon(f.visited) });
+  marker.bindPopup(() => buildPopup(f), { maxWidth: 280 });
+  if (f.visited) marker.addTo(state.visitedLayer);
+  else marker.addTo(state.unvisitedLayer);
+  state.markers.set(f.id, marker);
+}
+
+async function loadFalls() {
+  const res = await fetch(`${API_URL}/falls`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('API ' + res.status);
+  return await res.json();
+}
+
+(async function() {
+  try {
+    setSync('● 読み込み中...', '');
+    const data = await loadFalls();
+    state.falls = data.falls.filter(f => f.lat != null && f.lng != null);
+    state.falls.forEach(f => state.byId.set(f.id, f));
+
+    state.map = L.map('map', {
+      center: [36.5, 137.5],
+      zoom: 5,
+      minZoom: 4,
+      maxZoom: 15,
+      zoomControl: true,
     });
-  });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(state.map);
+
+    state.visitedLayer = L.layerGroup().addTo(state.map);
+    state.unvisitedLayer = L.layerGroup().addTo(state.map);
+
+    state.falls.forEach(f => replaceMarker(f));
+    updateStats();
+    setSync('✓ Notion接続', 'ok');
+    document.getElementById('loading').style.display = 'none';
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const f = btn.dataset.filter;
+        if (f === 'all') {
+          state.map.addLayer(state.visitedLayer);
+          state.map.addLayer(state.unvisitedLayer);
+        } else if (f === 'visited') {
+          state.map.addLayer(state.visitedLayer);
+          state.map.removeLayer(state.unvisitedLayer);
+        } else {
+          state.map.removeLayer(state.visitedLayer);
+          state.map.addLayer(state.unvisitedLayer);
+        }
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').innerHTML = `
+      <div style="text-align: center;">
+        <div style="font-size: 14px; color: var(--accent); margin-bottom: 8px;">読み込みに失敗しました</div>
+        <div style="font-size: 11px; color: var(--text-dim);">${err.message || err}</div>
+        <button onclick="location.reload()" style="margin-top: 16px; padding: 8px 16px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer;">リトライ</button>
+      </div>
+    `;
+  }
 })();
 </script>
 </body>

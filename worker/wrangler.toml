@@ -1,0 +1,9 @@
+name = "taki-map-api"
+main = "index.js"
+compatibility_date = "2025-12-01"
+
+[vars]
+DATABASE_ID = "23713576-f730-8013-8d8d-f07a61619a07"
+ALLOW_ORIGIN = "*"
+
+# NOTION_TOKEN は wrangler secret put NOTION_TOKEN で設定
