@@ -593,14 +593,16 @@ function renderAll() {
     galleryEl.innerHTML = '<div class="gallery-empty">最初の一滝を、ここから</div>';
   } else {
     galleryEl.innerHTML = visitedFalls.map(f => {
-      const img = f.imageUrl
-        ? `<img class="gallery-img" src="${escapeHtml(f.imageUrl)}" alt="${escapeHtml(f.name)}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-fallback').style.display='flex'; this.style.display='none'" />`
+      // ギャラリーは「証拠写真」（自分が訪問時に撮った写真）を優先表示
+      const photoUrl = f.evidenceUrl;
+      const img = photoUrl
+        ? `<img class="gallery-img" src="${escapeHtml(photoUrl)}" alt="${escapeHtml(f.name)}" loading="lazy" onerror="this.parentElement.querySelector('.gallery-img-fallback').style.display='flex'; this.style.display='none'" />`
         : '';
       const desc = f.description ? `<div class="gallery-desc">${escapeHtml(f.description)}</div>` : '';
       return `
         <a class="gallery-card" href="${escapeHtml(f.notionUrl)}" target="_blank" rel="noopener">
           ${img}
-          <div class="gallery-img-fallback" style="display:${f.imageUrl ? 'none' : 'flex'}">💧</div>
+          <div class="gallery-img-fallback" style="display:${photoUrl ? 'none' : 'flex'}">💧</div>
           <div class="gallery-body">
             <div class="gallery-name">${THREE_GREATS.has(f.name) ? '👑 ' : ''}${escapeHtml(f.name)}</div>
             <div class="gallery-meta">
